@@ -213,6 +213,16 @@ def generate_images_task(task_id: str, project_id: str, ai_service, file_service
             if not ref_image_path:
                 raise ValueError("No template image found for project")
             
+            # 从项目描述中提取图片 URL
+            from models import Project
+            project = Project.query.get(project_id)
+            additional_ref_images = []
+            if project and project.idea_prompt:
+                image_urls = ai_service.extract_image_urls_from_markdown(project.idea_prompt)
+                if image_urls:
+                    print(f"[INFO] Found {len(image_urls)} image(s) in project description")
+                    additional_ref_images = image_urls
+            
             # Initialize progress
             task.set_progress({
                 "total": len(pages),
@@ -252,16 +262,21 @@ def generate_images_task(task_id: str, project_id: str, ai_service, file_service
                         desc_text = desc_content.get('text', '')
                         print(f"[DEBUG] Got description text for page {page_id}: {desc_text[:100]}...")
                         
+                        # 检查是否有素材图片（additional_ref_images 在外部作用域中已定义）
+                        has_material_images = len(additional_ref_images) > 0 if additional_ref_images else False
+                        
                         # Generate image prompt
                         prompt = ai_service.generate_image_prompt(
-                            outline, page_data, desc_text, page_index
+                            outline, page_data, desc_text, page_index,
+                            has_material_images=has_material_images
                         )
                         print(f"[DEBUG] Generated image prompt for page {page_id}")
                         
                         # Generate image
                         print(f"[INFO] 🎨 Calling AI service to generate image for page {page_index}/{len(pages)}...")
                         image = ai_service.generate_image(
-                            prompt, ref_image_path, aspect_ratio, resolution
+                            prompt, ref_image_path, aspect_ratio, resolution,
+                            additional_ref_images=additional_ref_images if additional_ref_images else None
                         )
                         print(f"[INFO] ✅ Image generated successfully for page {page_index}")
                         

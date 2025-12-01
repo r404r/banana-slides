@@ -208,22 +208,13 @@ export const Home: React.FC = () => {
           </p>
 
           {/* 输入区 */}
-          {activeTab === 'idea' ? (
-            <Input
-              placeholder={tabConfig[activeTab].placeholder}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="mb-6"
-            />
-          ) : (
-            <Textarea
-              placeholder={tabConfig[activeTab].placeholder}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={10}
-              className="mb-6"
-            />
-          )}
+          <Textarea
+            placeholder={tabConfig[activeTab].placeholder}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={activeTab === 'idea' ? 4 : 10}
+            className="mb-6"
+          />
 
           {/* 模板选择 */}
           <div className="mb-8">

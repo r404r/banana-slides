@@ -278,7 +278,9 @@ def generate_descriptions(project_id):
                 outline.append(page_data)
         
         data = request.get_json() or {}
-        max_workers = data.get('max_workers', 5)
+        from flask import current_app
+        # 从配置中读取默认并发数，如果请求中提供了则使用请求的值
+        max_workers = data.get('max_workers', current_app.config.get('MAX_DESCRIPTION_WORKERS', 5))
         
         # Create task
         task = Task(
@@ -296,7 +298,6 @@ def generate_descriptions(project_id):
         db.session.commit()
         
         # Initialize AI service
-        from flask import current_app
         ai_service = AIService(
             current_app.config['GOOGLE_API_KEY'],
             current_app.config['GOOGLE_API_BASE']
@@ -369,7 +370,9 @@ def generate_images(project_id):
                 outline.append(page_data)
         
         data = request.get_json() or {}
-        max_workers = data.get('max_workers', 8)
+        from flask import current_app
+        # 从配置中读取默认并发数，如果请求中提供了则使用请求的值
+        max_workers = data.get('max_workers', current_app.config.get('MAX_IMAGE_WORKERS', 8))
         use_template = data.get('use_template', True)
         
         # Create task
@@ -388,7 +391,6 @@ def generate_images(project_id):
         db.session.commit()
         
         # Initialize services
-        from flask import current_app
         ai_service = AIService(
             current_app.config['GOOGLE_API_KEY'],
             current_app.config['GOOGLE_API_BASE']

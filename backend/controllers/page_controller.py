@@ -329,11 +329,22 @@ def generate_page_image(project_id, page_id):
         
         desc_text = desc_content.get('text', '')
         
+        # 从项目描述中提取图片 URL（在生成 prompt 之前提取，以便告知 AI）
+        additional_ref_images = []
+        has_material_images = False
+        if project.idea_prompt:
+            image_urls = ai_service.extract_image_urls_from_markdown(project.idea_prompt)
+            if image_urls:
+                print(f"[INFO] Found {len(image_urls)} image(s) in project description")
+                additional_ref_images = image_urls
+                has_material_images = True
+        
         prompt = ai_service.generate_image_prompt(
             outline,
             page_data,
             desc_text,
-            page.order_index + 1
+            page.order_index + 1,
+            has_material_images=has_material_images
         )
         
         # Generate image
@@ -344,7 +355,8 @@ def generate_page_image(project_id, page_id):
             prompt,
             ref_image_path,
             current_app.config['DEFAULT_ASPECT_RATIO'],
-            current_app.config['DEFAULT_RESOLUTION']
+            current_app.config['DEFAULT_RESOLUTION'],
+            additional_ref_images=additional_ref_images if additional_ref_images else None
         )
         
         if not image:
