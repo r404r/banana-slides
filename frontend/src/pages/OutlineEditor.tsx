@@ -164,10 +164,10 @@ export const OutlineEditor: React.FC = () => {
       </header>
 
       {/* 上下文栏 */}
-      <div className="bg-banana-50 border-b border-banana-100 px-6 py-3">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium text-gray-700">📊 PPT构想:</span>
-          <span className="text-gray-900">{currentProject.idea_prompt}</span>
+      <div className="bg-banana-50 border-b border-banana-100 px-6 py-3 max-h-32 overflow-y-auto">
+        <div className="flex items-start gap-2 text-sm">
+          <span className="font-medium text-gray-700 flex-shrink-0">📊 PPT构想:</span>
+          <span className="text-gray-900 break-words">{currentProject.idea_prompt}</span>
         </div>
       </div>
 
