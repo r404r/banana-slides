@@ -10,16 +10,9 @@ services:
       # 宿主机端口:容器内部端口（由 PORT 控制，默认 5000）
       # 外部访问始终是 http://localhost:5000，内部监听端口可通过 PORT 调整
       - "5000:${PORT:-5000}"
-    environment:
-      - FLASK_ENV=production
-      # 将宿主机的 PORT 环境变量传入容器，默认 5000
-      - PORT=${PORT:-5000}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - GOOGLE_API_BASE=${GOOGLE_API_BASE:-https://generativelanguage.googleapis.com}
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:80,http://localhost:3000}
-      - MAX_DESCRIPTION_WORKERS=${MAX_DESCRIPTION_WORKERS:-5}
-      - MAX_IMAGE_WORKERS=${MAX_IMAGE_WORKERS:-8}
+    # 从 .env 文件自动加载所有环境变量
+    env_file:
+      - .env
     volumes:
       # 持久化数据库
       - ./backend/instance:/app/backend/instance
