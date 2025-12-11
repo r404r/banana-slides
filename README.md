@@ -162,14 +162,13 @@ cd banana-slides
 
 1. **配置环境变量**
 
-> **接口格式对标AIHubMix平台，推荐使用 [AIHubMix](https://aihubmix.com/?aff=17EC) 获取API密钥，减小迁移成本**  
-
 创建 `.env` 文件（参考 `.env.example`）：
 ```bash
 cp .env.example .env
 ```
 
 编辑 `.env` 文件，配置必要的环境变量：
+> **项目接口以AIHubMix平台格式为标准，推荐使用 [AIHubMix](https://aihubmix.com/?aff=17EC) 获取API密钥，无痛切换上百个主流模型，减小迁移成本**  
 ```env
 # AI Provider格式配置 (gemini / openai)
 AI_PROVIDER_FORMAT=gemini
@@ -258,14 +257,13 @@ uv sync
 
 3. **配置环境变量**
 
-> **接口格式对标AIHubMix平台，推荐使用 [AIHubMix](https://aihubmix.com/?aff=17EC) 获取API密钥，减少迁移成本**  
-
 复制环境变量模板：
 ```bash
 cp .env.example .env
 ```
 
 编辑 `.env` 文件，配置你的 API 密钥：
+> **项目接口以AIHubMix平台格式为标准，推荐使用 [AIHubMix](https://aihubmix.com/?aff=17EC) 获取API密钥，无痛切换上百个主流模型，减小迁移成本** 
 ```env
 GOOGLE_API_KEY=your-api-key-here
 GOOGLE_API_BASE=https://generativelanguage.googleapis.com
