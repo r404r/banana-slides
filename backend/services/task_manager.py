@@ -55,7 +55,7 @@ task_manager = TaskManager(max_workers=4)
 def generate_descriptions_task(task_id: str, project_id: str, ai_service, 
                                project_context, outline: List[Dict], 
                                max_workers: int = 5, app=None,
-                               language: str = 'zh'):
+                               language: str = None):
     """
     Background task for generating page descriptions
     Based on demo.py gen_desc() with parallel processing

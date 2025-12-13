@@ -210,7 +210,7 @@ def generate_page_description(project_id, page_id):
         
         data = request.get_json() or {}
         force_regenerate = data.get('force_regenerate', False)
-        language = data.get('language', 'zh')
+        language = data.get('language', current_app.config.get('OUTPUT_LANGUAGE', 'zh'))
         
         # Check if already generated
         if page.get_description_content() and not force_regenerate:

@@ -200,7 +200,7 @@ class AIService:
         outline = json.loads(outline_text)
         return outline
     
-    def parse_outline_text(self, project_context: ProjectContext, language='zh') -> List[Dict]:
+    def parse_outline_text(self, project_context: ProjectContext, language: str = None) -> List[Dict]:
         """
         Parse user-provided outline text into structured outline format
         This method analyzes the text and splits it into pages without modifying the original text
