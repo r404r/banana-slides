@@ -122,34 +122,18 @@ def create_app():
         status = os.getenv('SITE_STATUS', 'sufficient')
         return {'status': status}
     
-    # Output language endpoints
+    # Output language endpoint
     @app.route('/api/output-language', methods=['GET'])
     def get_output_language():
         """
-        获取当前输出语言设置
+        获取默认输出语言设置（从环境变量读取）
         返回: zh, ja, en, auto
+        
+        注意：这只返回服务器配置的默认语言。
+        实际的语言选择应由前端在 sessionStorage 中管理，
+        并在每次生成请求时通过 language 参数传递。
         """
         return {'data': {'language': Config.OUTPUT_LANGUAGE}}
-    
-    @app.route('/api/output-language', methods=['POST'])
-    def set_output_language():
-        """
-        设置输出语言
-        可选值: zh (中文), ja (日本語), en (English), auto (自动)
-        """
-        from flask import request
-        data = request.get_json()
-        language = data.get('language', 'zh')
-
-        # 验证语言选项
-        valid_languages = ['zh', 'ja', 'en', 'auto']
-        if language not in valid_languages:
-            return {'error': f'Invalid language. Must be one of: {valid_languages}'}, 400
-
-        # 动态更新 Config 类的属性
-        Config.OUTPUT_LANGUAGE = language
-
-        return {'data': {'language': language, 'message': 'Language updated successfully'}}
 
     # Root endpoint
     @app.route('/')
