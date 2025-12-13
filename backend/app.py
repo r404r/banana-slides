@@ -112,6 +112,45 @@ def create_app():
     def health_check():
         return {'status': 'ok', 'message': 'Banana Slides API is running'}
     
+    # Site status endpoint
+    @app.route('/api/site-status')
+    def site_status():
+        """
+        获取站点状态
+        可选值: sufficient (余额充足), insufficient (欠费), maintenance (维护)
+        """
+        status = os.getenv('SITE_STATUS', 'sufficient')
+        return {'status': status}
+    
+    # Output language endpoints
+    @app.route('/api/output-language', methods=['GET'])
+    def get_output_language():
+        """
+        获取当前输出语言设置
+        返回: zh, ja, en, auto
+        """
+        return {'language': Config.OUTPUT_LANGUAGE}
+    
+    @app.route('/api/output-language', methods=['POST'])
+    def set_output_language():
+        """
+        设置输出语言
+        可选值: zh (中文), ja (日本語), en (English), auto (自动)
+        """
+        from flask import request
+        data = request.get_json()
+        language = data.get('language', 'zh')
+        
+        # 验证语言选项
+        valid_languages = ['zh', 'ja', 'en', 'auto']
+        if language not in valid_languages:
+            return {'error': f'Invalid language. Must be one of: {valid_languages}'}, 400
+        
+        # 动态更新 Config 类的属性
+        Config.OUTPUT_LANGUAGE = language
+        
+        return {'language': language, 'message': 'Language updated successfully'}
+    
     # Root endpoint
     @app.route('/')
     def index():
@@ -154,4 +193,3 @@ if __name__ == '__main__':
     # Enable reloader for hot reload in development
     # Using absolute paths for database, so WSL path issues should not occur
     app.run(host='0.0.0.0', port=port, debug=debug, use_reloader=True)
-
