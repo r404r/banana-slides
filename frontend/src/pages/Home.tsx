@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb, Search, Globe } from 'lucide-react';
 import { Button, Textarea, Card, useToast, MaterialGeneratorModal, ReferenceFileList, ReferenceFileSelector, FilePreviewModal, ImagePreviewList, SiteStatusBanner } from '@/components/shared';
 import { TemplateSelector, getTemplateFile } from '@/components/shared/TemplateSelector';
-import { listUserTemplates, type UserTemplate, uploadReferenceFile, type ReferenceFile, associateFileToProject, triggerFileParse, uploadMaterial, associateMaterialsToProject, getOutputLanguage, setOutputLanguage, OUTPUT_LANGUAGE_OPTIONS, type OutputLanguage } from '@/api/endpoints';
+import { listUserTemplates, type UserTemplate, uploadReferenceFile, type ReferenceFile, associateFileToProject, triggerFileParse, uploadMaterial, associateMaterialsToProject, getDefaultOutputLanguage, getStoredOutputLanguage, storeOutputLanguage, OUTPUT_LANGUAGE_OPTIONS, type OutputLanguage } from '@/api/endpoints';
 import { useProjectStore } from '@/store/useProjectStore';
 
 type CreationType = 'idea' | 'outline' | 'description';
@@ -65,13 +65,13 @@ export const Home: React.FC = () => {
           setOutputLanguageState(savedLanguage as OutputLanguage);
           // 同步到后端（静默操作，不显示提示）
           try {
-            await setOutputLanguage(savedLanguage as OutputLanguage);
+            storeOutputLanguage(savedLanguage as OutputLanguage);
           } catch (syncError) {
             console.error('同步语言设置到后端失败:', syncError);
           }
         } else {
           // 如果没有保存的选择，从后端获取默认值
-          const response = await getOutputLanguage();
+          const response = await getDefaultOutputLanguage();
           if (response.data?.language) {
             setOutputLanguageState(response.data.language);
             // 保存到 sessionStorage
@@ -93,17 +93,11 @@ export const Home: React.FC = () => {
   }, []);
 
   // 处理语言选择变化
-  const handleLanguageChange = async (language: OutputLanguage) => {
-    try {
-      await setOutputLanguage(language);
-      setOutputLanguageState(language);
-      // 保存到 sessionStorage 以便刷新后保留
-      sessionStorage.setItem('outputLanguage', language);
-      show({ message: `输出语言已设置为: ${OUTPUT_LANGUAGE_OPTIONS.find(o => o.value === language)?.label}`, type: 'success' });
-    } catch (error) {
-      console.error('设置输出语言失败:', error);
-      show({ message: '设置输出语言失败', type: 'error' });
-    }
+  const handleLanguageChange = (language: OutputLanguage) => {
+    // 只在本地保存语言设置，不再调用后端API
+    storeOutputLanguage(language);
+    setOutputLanguageState(language);
+    show({ message: `输出语言已设置为: ${OUTPUT_LANGUAGE_OPTIONS.find(o => o.value === language)?.label}`, type: 'success' });
   };
 
   const handleOpenMaterialModal = () => {
