@@ -106,7 +106,7 @@ def _format_reference_files_xml(reference_files_content: Optional[List[Dict[str,
     return '\n'.join(xml_parts)
 
 
-def get_outline_generation_prompt(project_context: 'ProjectContext', language: str = 'zh') -> str:
+def get_outline_generation_prompt(project_context: 'ProjectContext', language: str = None) -> str:
     """
     生成 PPT 大纲的 prompt
     

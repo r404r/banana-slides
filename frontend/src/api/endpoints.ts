@@ -104,10 +104,10 @@ export const updatePagesOrder = async (
  * @param language 输出语言（可选，默认从 sessionStorage 获取）
  */
 export const generateOutline = async (projectId: string, language?: OutputLanguage): Promise<ApiResponse> => {
-  const lang = language || getStoredOutputLanguage() || 'zh';
+  const lang = language || getStoredOutputLanguage();
   const response = await apiClient.post<ApiResponse>(
     `/api/projects/${projectId}/generate/outline`,
-    { language: lang }
+    lang ? { language: lang } : {}
   );
   return response.data;
 };
