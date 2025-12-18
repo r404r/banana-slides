@@ -293,10 +293,12 @@ npm install
 
 
 #### 启动后端服务
+> （可选）如果本地已有重要数据，升级前建议先备份数据库：  
+> `cp backend/instance/database.db backend/instance/database.db.bak`
 
 ```bash
 cd backend
-uv run python app.py
+uv run alembic upgrade head && uv run python app.py
 ```
 
 后端服务将在 `http://localhost:5000` 启动。
@@ -434,11 +436,6 @@ banana-slides/
 ├── LICENSE                     # 许可证
 └── README.md                   # 本文件
 ```
-
-
-欢迎提出新功能建议或反馈，本人也会~~佛系~~回答大家问题
-
-<img width="300" alt="image" src="https://github.com/user-attachments/assets/9060bc6b-4e6a-4f0f-90b1-c4ca8d5e6a95" />
 
 
 ## 🤝 贡献指南

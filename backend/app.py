@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 import sqlite3
+from sqlalchemy.exc import SQLAlchemyError
+from flask_migrate import Migrate
 
 # Load environment variables from project root .env file
 _project_root = Path(__file__).parent.parent
@@ -21,6 +23,7 @@ from models import db
 from config import Config
 from controllers.material_controller import material_bp, material_global_bp
 from controllers.reference_file_controller import reference_file_bp
+from controllers.settings_controller import settings_bp
 from controllers import project_bp, page_bp, template_bp, user_template_bp, export_bp, file_bp
 
 
@@ -92,6 +95,8 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     CORS(app, origins=cors_origins)
+    # Database migrations (Alembic via Flask-Migrate)
+    Migrate(app, db)
     
     # Register blueprints
     app.register_blueprint(project_bp)
@@ -103,10 +108,12 @@ def create_app():
     app.register_blueprint(material_bp)
     app.register_blueprint(material_global_bp)
     app.register_blueprint(reference_file_bp, url_prefix='/api/reference-files')
-    
+    app.register_blueprint(settings_bp)
+
     with app.app_context():
-        db.create_all()
-    
+        # Load settings from database and sync to app.config
+        _load_settings_to_config(app)
+
     # Health check endpoint
     @app.route('/health')
     def health_check():
@@ -116,14 +123,16 @@ def create_app():
     @app.route('/api/output-language', methods=['GET'])
     def get_output_language():
         """
-        获取默认输出语言设置（从环境变量读取）
+        获取用户的输出语言偏好（从数据库 Settings 读取）
         返回: zh, ja, en, auto
-        
-        注意：这只返回服务器配置的默认语言。
-        实际的语言选择应由前端在 sessionStorage 中管理，
-        并在每次生成请求时通过 language 参数传递。
         """
-        return {'data': {'language': Config.OUTPUT_LANGUAGE}}
+        from models import Settings
+        try:
+            settings = Settings.get_settings()
+            return {'data': {'language': settings.output_language}}
+        except SQLAlchemyError as db_error:
+            logging.warning(f"Failed to load output language from settings: {db_error}")
+            return {'data': {'language': Config.OUTPUT_LANGUAGE}}  # 默认中文
 
     # Root endpoint
     @app.route('/')
@@ -142,13 +151,62 @@ def create_app():
     return app
 
 
+def _load_settings_to_config(app):
+    """Load settings from database and apply to app.config on startup"""
+    from models import Settings
+    try:
+        settings = Settings.get_settings()
+        
+        # Load AI provider format (always sync, has default value)
+        if settings.ai_provider_format:
+            app.config['AI_PROVIDER_FORMAT'] = settings.ai_provider_format
+            logging.info(f"Loaded AI_PROVIDER_FORMAT from settings: {settings.ai_provider_format}")
+        
+        # Load API configuration
+        # Note: We load even if value is None/empty to allow clearing settings
+        # But we only log if there's an actual value
+        if settings.api_base_url is not None:
+            # 将数据库中的统一 API Base 同步到 Google/OpenAI 两个配置，确保覆盖环境变量
+            app.config['GOOGLE_API_BASE'] = settings.api_base_url
+            app.config['OPENAI_API_BASE'] = settings.api_base_url
+            if settings.api_base_url:
+                logging.info(f"Loaded API_BASE from settings: {settings.api_base_url}")
+            else:
+                logging.info("API_BASE is empty in settings, using env var or default")
+
+        if settings.api_key is not None:
+            # 同步到两个提供商的 key，数据库优先于环境变量
+            app.config['GOOGLE_API_KEY'] = settings.api_key
+            app.config['OPENAI_API_KEY'] = settings.api_key
+            if settings.api_key:
+                logging.info("Loaded API key from settings")
+            else:
+                logging.info("API key is empty in settings, using env var or default")
+
+        # Load image generation settings
+        app.config['DEFAULT_RESOLUTION'] = settings.image_resolution
+        app.config['DEFAULT_ASPECT_RATIO'] = settings.image_aspect_ratio
+        logging.info(f"Loaded image settings: {settings.image_resolution}, {settings.image_aspect_ratio}")
+
+        # Load worker settings
+        app.config['MAX_DESCRIPTION_WORKERS'] = settings.max_description_workers
+        app.config['MAX_IMAGE_WORKERS'] = settings.max_image_workers
+        logging.info(f"Loaded worker settings: desc={settings.max_description_workers}, img={settings.max_image_workers}")
+
+    except Exception as e:
+        logging.warning(f"Could not load settings from database: {e}")
+
+
 # Create app instance
 app = create_app()
 
 
 if __name__ == '__main__':
     # Run development server
-    port = int(os.getenv('PORT', 5000))
+    if os.getenv("IN_DOCKER", "0") == "1":
+        port = 5000 # 在 docker 内部部署时始终使用 5000 端口.
+    else:
+        port = int(os.getenv('PORT', 5000))
     debug = os.getenv('FLASK_ENV', 'development') == 'development'
     
     logging.info(
